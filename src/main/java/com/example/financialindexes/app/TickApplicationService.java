@@ -7,6 +7,6 @@ import org.springframework.stereotype.Service;
 public class TickApplicationService {
 
     public boolean receiveTick(Tick tick) {
-        return false;
+        return tick.isFresh();
     }
 }
