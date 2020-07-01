@@ -1,10 +1,12 @@
 package com.example.financialindexes.domain;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.math.BigDecimal;
 
 @Value
+@EqualsAndHashCode
 public class Tick {
     String instrument;
     BigDecimal price;
