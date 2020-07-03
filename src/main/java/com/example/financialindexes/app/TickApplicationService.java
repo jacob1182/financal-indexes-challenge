@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 public class TickApplicationService {
 
     private final TickRepository ticks;
+    private Statistics currentStats = Statistics.EMPTY;
 
     public boolean receiveTick(Tick tick) {
         if (!tick.isFresh())
@@ -18,10 +19,12 @@ public class TickApplicationService {
 
         ticks.save(tick);
 
+        currentStats = Statistics.calculate(ticks.findAll(), System.currentTimeMillis() - 60_000);
+
         return true;
     }
 
     public Statistics getStatistics() {
-        return Statistics.calculate(ticks.findAll(), System.currentTimeMillis() - 60_000);
+        return currentStats;
     }
 }

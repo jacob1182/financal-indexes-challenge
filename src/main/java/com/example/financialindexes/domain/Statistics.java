@@ -9,6 +9,12 @@ import java.util.List;
 
 @Value(staticConstructor = "of")
 public class Statistics {
+
+    public static final Statistics EMPTY =   of(
+            BigDecimal.valueOf(Double.MAX_VALUE),
+            BigDecimal.valueOf(Double.MIN_VALUE),
+            BigDecimal.ZERO, 0);
+
     BigDecimal min;
     BigDecimal max;
     BigDecimal sum;

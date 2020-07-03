@@ -1,6 +1,6 @@
 package com.example.financialindexes.api;
 
-import com.example.financialindexes.domain.TickRepository;
+import com.example.financialindexes.app.TickApplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +23,7 @@ class StatisticsControllerTest {
     private MockMvc mvc;
 
     @Autowired
-    private TickRepository ticks;
+    private TickApplicationService applicationService;
 
     @Test
     public void retrieveStatistics() throws Exception {
@@ -35,7 +35,7 @@ class StatisticsControllerTest {
                 genTick(150, timestamp - 40_000),
                 genTick(250, timestamp - 30_000),
                 genTick(200, timestamp - 20_000)
-        ).forEach(ticks::save);
+        ).forEach(applicationService::receiveTick);
 
         mvc.perform(get("/statistics"))
                 .andExpect(status().isOk())
