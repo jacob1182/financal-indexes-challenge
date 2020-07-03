@@ -34,6 +34,17 @@ class StatisticsTest {
 
     }
 
+    @Test
+    void shouldCalculateStatisticsWithEmptySource() {
+        var statistics = Statistics.calculate(List.of(), System.currentTimeMillis());
+
+        assertEquals(Double.MAX_VALUE, statistics.getMin().doubleValue());
+        assertEquals(Double.MIN_VALUE, statistics.getMax().doubleValue());
+        assertEquals(0, statistics.getSum().doubleValue());
+        assertEquals(0, statistics.getAvg().doubleValue());
+        assertEquals(0, statistics.getCount());
+    }
+
     @Value(staticConstructor = "of")
     public static class Statistics {
         BigDecimal min;
