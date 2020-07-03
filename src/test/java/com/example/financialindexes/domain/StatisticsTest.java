@@ -1,10 +1,10 @@
 package com.example.financialindexes.domain;
 
-import com.example.financialindexes.TickUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.example.financialindexes.TickUtils.genTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class StatisticsTest {
@@ -14,11 +14,11 @@ class StatisticsTest {
 
         var timestamp = System.currentTimeMillis();
         var source = List.of(
-                TickUtils.genTick(325, timestamp - 61_000),
-                TickUtils.genTick(100, timestamp - 50_000),
-                TickUtils.genTick(150, timestamp - 40_000),
-                TickUtils.genTick(250, timestamp - 30_000),
-                TickUtils.genTick(200, timestamp - 20_000)
+                genTick(325, timestamp - 61_000),
+                genTick(100, timestamp - 50_000),
+                genTick(150, timestamp - 40_000),
+                genTick(250, timestamp - 30_000),
+                genTick(200, timestamp - 20_000)
         );
 
         var statistics = Statistics.calculate(source, timestamp - 60_000);
