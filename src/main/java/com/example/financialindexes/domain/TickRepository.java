@@ -2,6 +2,8 @@ package com.example.financialindexes.domain;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,5 +24,9 @@ public class TickRepository {
      * */
     public Tick findByTimestamp(long timestamp) {
         return ticks.get(timestamp);
+    }
+
+    public List<Tick> findAll() {
+        return new ArrayList<>(ticks.values());
     }
 }

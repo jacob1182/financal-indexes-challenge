@@ -1,5 +1,6 @@
 package com.example.financialindexes.app;
 
+import com.example.financialindexes.domain.Statistics;
 import com.example.financialindexes.domain.Tick;
 import com.example.financialindexes.domain.TickRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +19,9 @@ public class TickApplicationService {
         ticks.save(tick);
 
         return true;
+    }
+
+    public Statistics getStatistics() {
+        return Statistics.calculate(ticks.findAll(), System.currentTimeMillis() - 60_000);
     }
 }
