@@ -4,6 +4,7 @@ import lombok.Value;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Random;
 import java.util.TreeSet;
 
@@ -25,6 +26,39 @@ class StatisticsSnapshotTest {
             timeSum += System.currentTimeMillis() - time;
         }
         assertThat(timeSum).isLessThan(50);
+    }
+
+
+    @Test
+    void testStatisticsValues() {
+        StatisticsSnapshot snapshot = StatisticsSnapshot.EMPTY;
+        var ticks = new TreeSet<Tick>();
+        for (int i = 0; i < 10; i++) {
+            var price = (double) (random.nextInt(100) + 100) / 100;
+            var timestamp = System.currentTimeMillis() - random.nextInt(59) * 1_000;
+            var tick = genTick(price, timestamp);
+            ticks.add(tick);
+            snapshot = snapshot.withTick(tick);
+            assertStatistic(snapshot.getStatistics(), ticks);
+        }
+    }
+
+    private void assertStatistic(Statistics statistics, Collection<Tick> ticks) {
+        var minPrice = new BigDecimal(Double.MAX_VALUE);
+        var maxPrice = new BigDecimal(Double.MIN_VALUE);
+        var sumPrice = BigDecimal.ZERO;
+        var count = 0L;
+
+        for (Tick current: ticks) {
+            minPrice = minPrice.min(current.getPrice());
+            maxPrice = maxPrice.max(current.getPrice());
+            sumPrice = sumPrice.add(current.getPrice());
+            count++;
+        }
+
+        assertThat(statistics)
+                .extracting("min", "max", "sum", "count")
+                .containsExactly(minPrice, maxPrice, sumPrice, count);
     }
 
     @Value(staticConstructor = "of")
