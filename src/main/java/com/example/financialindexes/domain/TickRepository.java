@@ -29,4 +29,8 @@ public class TickRepository {
     public List<Tick> findAll() {
         return new ArrayList<>(ticks.values());
     }
+
+    public void deleteAll() {
+        ticks.clear();
+    }
 }

@@ -3,6 +3,7 @@ package com.example.financialindexes.api;
 import com.example.financialindexes.domain.TickRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,11 @@ class TickControllerTest {
 
     @Autowired
     private TickRepository ticks;
+
+    @AfterEach
+    void cleanUp() {
+        ticks.deleteAll();
+    }
 
     @Test
     void receiveTick() throws Exception {
