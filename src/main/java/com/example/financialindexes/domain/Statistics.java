@@ -20,22 +20,18 @@ public class Statistics {
     BigDecimal sum;
     long count;
 
-    public static Statistics calculate(List<Tick> source, long startTimestamp) {
+    public static Statistics calculate(List<Tick> freshTicks) {
         var minPrice = BigDecimal.valueOf(Double.MAX_VALUE);
         var maxPrice = BigDecimal.valueOf(Double.MIN_VALUE);
         var sumPrice = BigDecimal.ZERO;
-        var counter = 0;
 
-        for (Tick current : source) {
-            if (current.getTimestamp() >= startTimestamp) {
-                minPrice = minPrice.min(current.getPrice());
-                maxPrice = maxPrice.max(current.getPrice());
-                sumPrice = sumPrice.add(current.getPrice());
-                counter++;
-            }
+        for (Tick current : freshTicks) {
+            minPrice = minPrice.min(current.getPrice());
+            maxPrice = maxPrice.max(current.getPrice());
+            sumPrice = sumPrice.add(current.getPrice());
         }
 
-        return of(minPrice, maxPrice, sumPrice, counter);
+        return of(minPrice, maxPrice, sumPrice, freshTicks.size());
     }
 
     public BigDecimal getAvg() {

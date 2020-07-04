@@ -2,32 +2,37 @@ package com.example.financialindexes.domain;
 
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 @Component
 public class TickRepository {
 
-    private final Map<Long, Tick> ticks = new ConcurrentHashMap<>();
+    private final Queue<Tick> ticks = new ConcurrentLinkedQueue<>();
 
     /**
      * Persist a tick.
      * */
     public void save(Tick tick) {
-        ticks.put(tick.getTimestamp(), tick);
+        ticks.add(tick);
     }
 
     /**
      * Retrieve a tick by its timestamp.
      * */
     public Tick findByTimestamp(long timestamp) {
-        return ticks.get(timestamp);
+        return ticks.parallelStream()
+                .filter(tick -> tick.getTimestamp() == timestamp)
+                .findFirst()
+                .orElse(null);
     }
 
-    public List<Tick> findAll() {
-        return new ArrayList<>(ticks.values());
+    public List<Tick> findFreshTicks(long threshold) {
+        return ticks.stream()
+                .filter(tick -> tick.getTimestamp() >= threshold)
+                .collect(Collectors.toList());
     }
 
     public void deleteAll() {

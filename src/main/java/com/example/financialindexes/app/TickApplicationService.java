@@ -19,7 +19,9 @@ public class TickApplicationService {
 
         ticks.save(tick);
 
-        currentStats = Statistics.calculate(ticks.findAll(), System.currentTimeMillis() - 60_000);
+        var threshold = System.currentTimeMillis() - 60_000;
+        var freshTicks = ticks.findFreshTicks(threshold);
+        currentStats = Statistics.calculate(freshTicks);
 
         return true;
     }

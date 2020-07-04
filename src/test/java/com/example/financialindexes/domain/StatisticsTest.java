@@ -13,15 +13,14 @@ class StatisticsTest {
     void shouldCalculateStatistics() {
 
         var timestamp = System.currentTimeMillis();
-        var source = List.of(
-                genTick(325, timestamp - 61_000),
+        var freshTicks = List.of(
                 genTick(100, timestamp - 50_000),
                 genTick(150, timestamp - 40_000),
                 genTick(250, timestamp - 30_000),
                 genTick(200, timestamp - 20_000)
         );
 
-        var statistics = Statistics.calculate(source, timestamp - 60_000);
+        var statistics = Statistics.calculate(freshTicks);
 
         assertEquals(100d, statistics.getMin().doubleValue());
         assertEquals(250d, statistics.getMax().doubleValue());
@@ -33,7 +32,7 @@ class StatisticsTest {
 
     @Test
     void shouldCalculateStatisticsWithEmptySource() {
-        var statistics = Statistics.calculate(List.of(), System.currentTimeMillis());
+        var statistics = Statistics.calculate(List.of());
 
         assertEquals(Double.MAX_VALUE, statistics.getMin().doubleValue());
         assertEquals(Double.MIN_VALUE, statistics.getMax().doubleValue());
