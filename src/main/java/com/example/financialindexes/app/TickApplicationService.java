@@ -1,8 +1,8 @@
 package com.example.financialindexes.app;
 
 import com.example.financialindexes.domain.Statistics;
+import com.example.financialindexes.domain.StatisticsSnapshot;
 import com.example.financialindexes.domain.Tick;
-import com.example.financialindexes.domain.TickRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,23 +10,22 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TickApplicationService {
 
-    private final TickRepository ticks;
-    private Statistics currentStats = Statistics.EMPTY;
+    private StatisticsSnapshot statSnapshot = StatisticsSnapshot.getNewInstance();
 
     public boolean receiveTick(Tick tick) {
-        if (!tick.isFresh())
+        if (!tick.isFresh(System.currentTimeMillis()))
             return false;
 
-        ticks.save(tick);
-
-        var threshold = System.currentTimeMillis() - 60_000;
-        var freshTicks = ticks.findFreshTicks(threshold);
-        currentStats = Statistics.calculate(freshTicks);
+        statSnapshot = statSnapshot.withTick(tick);
 
         return true;
     }
 
     public Statistics getStatistics() {
-        return currentStats;
+        return statSnapshot.getStatistics();
+    }
+
+    public void clearTicks() {
+        statSnapshot = StatisticsSnapshot.getNewInstance();
     }
 }
