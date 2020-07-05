@@ -4,6 +4,7 @@ import com.example.financialindexes.domain.Statistics;
 import com.example.financialindexes.domain.StatisticsSnapshot;
 import com.example.financialindexes.domain.Tick;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +20,11 @@ public class IndexApplicationService {
         statSnapshot = statSnapshot.withTick(tick);
 
         return true;
+    }
+
+    @Scheduled(fixedRate = 500)
+    public void asyncRecalculateStats() {
+        statSnapshot = statSnapshot.recalculate(System.currentTimeMillis());
     }
 
     public Statistics getStatistics() {
