@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class TickApplicationService {
+public class IndexApplicationService {
 
     private StatisticsSnapshot statSnapshot = StatisticsSnapshot.getNewInstance();
 

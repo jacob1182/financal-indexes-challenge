@@ -1,6 +1,6 @@
 package com.example.financialindexes.api;
 
-import com.example.financialindexes.app.TickApplicationService;
+import com.example.financialindexes.app.IndexApplicationService;
 import com.example.financialindexes.domain.Statistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -26,7 +26,7 @@ class TickControllerTest {
     private MockMvc mvc;
 
     @Autowired
-    private TickApplicationService applicationService;
+    private IndexApplicationService applicationService;
 
     @BeforeEach
     void setUp() {
