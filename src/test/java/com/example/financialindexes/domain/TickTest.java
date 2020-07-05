@@ -13,7 +13,7 @@ class TickTest {
         var freshTick = genTick(59);
         assertTrue(freshTick.isFresh(System.currentTimeMillis()));
 
-        var oldTick = genTick(60);
+        var oldTick = genTick(61);
         assertFalse(oldTick.isFresh(System.currentTimeMillis()));
     }
 }
