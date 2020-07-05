@@ -1,6 +1,5 @@
 package com.example.financialindexes.domain;
 
-import lombok.Value;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -10,7 +9,6 @@ import java.util.TreeSet;
 
 import static com.example.financialindexes.TickUtils.genTick;
 import static java.util.Comparator.comparing;
-import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class StatisticsSnapshotTest {
@@ -71,10 +69,40 @@ class StatisticsSnapshotTest {
         assertStatistic(snapshot, ticks);
     }
 
+    @Test
+    void testPerformanceWhenAsyncRecalculate() throws InterruptedException {
+        var snapshot = StatisticsSnapshot.getNewInstance();
+        var ticks = new TreeSet<>(comparing(Tick::getTimestamp));
+
+        // add 100 ticks with a window of 10ms
+        var startTime = System.currentTimeMillis();
+        var timestamp = startTime - 60_000;
+        for (int i = 0; i < 100; i++) {
+            var price = (double) (random.nextInt(100) + 100) / 100;
+            var tick = genTick(price, timestamp + 10 * i);
+            snapshot = snapshot.withTick(tick);
+            ticks.add(tick);
+        }
+
+        // test performance of recalculate every 100ms
+        var timeSum = 0;
+        while (snapshot.getStatistics().getCount() > 0) {
+            var current = System.currentTimeMillis();
+            var time = System.currentTimeMillis();
+            snapshot = snapshot.recalculate(current);
+            timeSum += System.currentTimeMillis() - time;
+            assertStatistic(snapshot, ticks);
+            Thread.sleep(100);
+        }
+
+        assertThat(timeSum).isLessThanOrEqualTo(5);
+    }
+
     private void assertStatistic(StatisticsSnapshot snapshot, Collection<Tick> ticks) {
         var time = System.currentTimeMillis();
         var threshold = time - 60_000;
-        if (!snapshot.isFresh(time)) {
+
+        if (!snapshot.isFresh(time) && !snapshot.getSource().isEmpty()) {
             var startTimestamp = snapshot.getSource().first().getTimestamp();
             assertThat(threshold - startTimestamp).isLessThanOrEqualTo(2); // allow diff time error up to 2ms
             threshold = startTimestamp;
@@ -94,8 +122,10 @@ class StatisticsSnapshotTest {
             }
         }
 
-        assertThat(snapshot.getStatistics())
-                .extracting("min", "max", "sum", "count")
-                .containsExactly(minPrice, maxPrice, sumPrice, count);
+        var stat = snapshot.getStatistics();
+        assertThat(stat.getMin().doubleValue()).isEqualTo(minPrice.doubleValue());
+        assertThat(stat.getMax().doubleValue()).isEqualTo(maxPrice.doubleValue());
+        assertThat(stat.getSum()).isEqualTo(sumPrice);
+        assertThat(stat.getCount()).isEqualTo(count);
     }
 }
