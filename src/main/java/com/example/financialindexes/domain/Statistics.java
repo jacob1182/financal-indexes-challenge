@@ -1,12 +1,14 @@
 package com.example.financialindexes.domain;
 
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
+import java.util.Collection;
 
+@EqualsAndHashCode
 @Value(staticConstructor = "of")
 public class Statistics {
 
@@ -20,7 +22,7 @@ public class Statistics {
     BigDecimal sum;
     long count;
 
-    public static Statistics calculate(List<Tick> freshTicks) {
+    public static Statistics calculate(Collection<Tick> freshTicks) {
         var minPrice = BigDecimal.valueOf(Double.MAX_VALUE);
         var maxPrice = BigDecimal.valueOf(Double.MIN_VALUE);
         var sumPrice = BigDecimal.ZERO;
@@ -38,5 +40,18 @@ public class Statistics {
         return count == 0
                 ? BigDecimal.ZERO
                 : sum.divide(BigDecimal.valueOf(count), RoundingMode.HALF_EVEN);
+    }
+
+    public boolean isEdge(Tick tick) {
+        return tick.getPrice().compareTo(min) <= 0
+            || tick.getPrice().compareTo(max) >= 0;
+    }
+
+    public Statistics withTick(Tick tick, BigDecimal oldPrice, long count) {
+        var minPrice = min.min(tick.getPrice());
+        var maxPrice = max.max(tick.getPrice());
+        var sumPrice = sum.add(tick.getPrice()).subtract(oldPrice);
+
+        return of(minPrice, maxPrice, sumPrice, count);
     }
 }

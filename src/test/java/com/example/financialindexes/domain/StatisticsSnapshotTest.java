@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 import static com.example.financialindexes.TickUtils.genTick;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class StatisticsSnapshotTest {
@@ -20,13 +21,15 @@ class StatisticsSnapshotTest {
     void testPerformanceWhenAddingNewTick() {
         var snapshot = StatisticsSnapshot.getNewInstance();
         var timeSum = 0;
+        var timestamp = System.currentTimeMillis() - 60_000;
         for (int i = 0; i < 10_000; i++) {
-            var tick = genTick(random.nextInt(59));
+            var price = (double) (random.nextInt(100) + 100) / 100;
+            var tick = genTick(price, timestamp + i);
             var time = System.currentTimeMillis();
             snapshot = snapshot.withTick(tick);
             timeSum += System.currentTimeMillis() - time;
         }
-        assertThat(timeSum).isLessThanOrEqualTo(50);
+        assertThat(timeSum).isLessThanOrEqualTo(150);
     }
 
 
@@ -40,7 +43,7 @@ class StatisticsSnapshotTest {
             var tick = genTick(price, timestamp);
             ticks.add(tick);
             snapshot = snapshot.withTick(tick);
-            assertStatistic(snapshot.getStatistics(), ticks);
+            assertStatistic(snapshot, ticks);
         }
     }
 
@@ -51,13 +54,13 @@ class StatisticsSnapshotTest {
 
         var timestamp = System.currentTimeMillis() - 59_900;
         for (int i = 0; i < 100; i++) {
-            var price = 10d + random.nextInt(100);
+            var price = 100d + random.nextInt(100);
             var tick = genTick(price, timestamp + i * 2);
             ticks.add(tick);
             snapshot = snapshot.withTick(tick);
         }
 
-        assertStatistic(snapshot.getStatistics(), ticks);
+        assertStatistic(snapshot, ticks);
 
         Thread.sleep(150);
 
@@ -65,11 +68,18 @@ class StatisticsSnapshotTest {
         ticks.add(tick);
 
         snapshot = snapshot.withTick(tick);
-        assertStatistic(snapshot.getStatistics(), ticks);
+        assertStatistic(snapshot, ticks);
     }
 
-    private void assertStatistic(Statistics statistics, Collection<Tick> ticks) {
-        var threshold = System.currentTimeMillis() - 60_000;
+    private void assertStatistic(StatisticsSnapshot snapshot, Collection<Tick> ticks) {
+        var time = System.currentTimeMillis();
+        var threshold = time - 60_000;
+        if (!snapshot.isFresh(time)) {
+            var startTimestamp = snapshot.getSource().first().getTimestamp();
+            assertThat(threshold - startTimestamp).isLessThanOrEqualTo(2); // allow diff time error up to 2ms
+            threshold = startTimestamp;
+        }
+
         var minPrice = new BigDecimal(Double.MAX_VALUE);
         var maxPrice = new BigDecimal(Double.MIN_VALUE);
         var sumPrice = BigDecimal.ZERO;
@@ -84,7 +94,7 @@ class StatisticsSnapshotTest {
             }
         }
 
-        assertThat(statistics)
+        assertThat(snapshot.getStatistics())
                 .extracting("min", "max", "sum", "count")
                 .containsExactly(minPrice, maxPrice, sumPrice, count);
     }
@@ -98,27 +108,37 @@ class StatisticsSnapshotTest {
             return of(Statistics.EMPTY, new TreeSet<>(comparing(Tick::getTimestamp)));
         }
 
+        public boolean isFresh(long currentTimestamp) {
+            return !source.isEmpty() && source.first().isFresh(currentTimestamp);
+        }
+
         public StatisticsSnapshot withTick(Tick tick) {
-            if (tick == null || !tick.isFresh())
+            var time = System.currentTimeMillis();
+
+            if (tick == null || !tick.isFresh(time))
                 return this;
 
             source.add(tick); // O(log(n))
 
-            // remove old ticks & old price sum
-            var it = source.iterator();
-            var sumOldPrice = BigDecimal.ZERO;
-            Tick currentTick;
+            var isFresh = isFresh(time);
+            var isEdge = statistics.isEdge(tick);
 
-            while (it.hasNext() && !(currentTick = it.next()).isFresh()) { // O(n)
-                sumOldPrice = sumOldPrice.add(currentTick.getPrice());
+            // remove old ticks & old price sum
+            var sumOldPrice = BigDecimal.ZERO;
+            var needsRecalculation = false;
+            var it = source.iterator();
+            Tick current;
+
+            while (it.hasNext() && !(current = it.next()).isFresh(time)) { // O(n)
+                sumOldPrice = sumOldPrice.add(current.getPrice());
+                needsRecalculation |= statistics.isEdge(current);
                 it.remove();
             }
 
             // adding new tick modify affect statistics values
-            var minPrice = statistics.getMin().min(tick.getPrice());
-            var maxPrice = statistics.getMax().max(tick.getPrice());
-            var sumPrice = statistics.getSum().add(tick.getPrice()).subtract(sumOldPrice);
-            var stat = Statistics.of(minPrice, maxPrice, sumPrice, statistics.getCount() + 1);
+            var stat = !needsRecalculation && (isFresh || isEdge)
+                    ? statistics.withTick(tick, sumOldPrice, source.size())
+                    : Statistics.calculate(source);
 
             return of(stat, source);
         }
