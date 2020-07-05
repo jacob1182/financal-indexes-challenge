@@ -1,6 +1,6 @@
 package com.example.financialindexes.api;
 
-import com.example.financialindexes.app.TickApplicationService;
+import com.example.financialindexes.app.IndexApplicationService;
 import com.example.financialindexes.domain.Tick;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TickController {
 
-    private final TickApplicationService tickService;
+    private final IndexApplicationService tickService;
 
     @PostMapping("/ticks")
     public ResponseEntity<Void> receiveTick(@RequestBody Tick tick) {

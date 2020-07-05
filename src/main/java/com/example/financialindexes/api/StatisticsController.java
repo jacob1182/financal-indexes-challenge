@@ -1,7 +1,7 @@
 package com.example.financialindexes.api;
 
 import com.example.financialindexes.api.dto.StatisticsDto;
-import com.example.financialindexes.app.TickApplicationService;
+import com.example.financialindexes.app.IndexApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/statistics")
 public class StatisticsController {
 
-    private final TickApplicationService applicationService;
+    private final IndexApplicationService applicationService;
 
     @GetMapping
     public StatisticsDto getStatistics() {
