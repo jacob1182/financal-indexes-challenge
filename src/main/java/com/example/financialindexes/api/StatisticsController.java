@@ -4,6 +4,7 @@ import com.example.financialindexes.api.dto.StatisticsDto;
 import com.example.financialindexes.app.IndexApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,5 +18,10 @@ public class StatisticsController {
     @GetMapping
     public StatisticsDto getStatistics() {
         return StatisticsDto.from(applicationService.getStatistics());
+    }
+
+    @GetMapping("/{instrument}")
+    public StatisticsDto getStatistics(@PathVariable String instrument) {
+        return StatisticsDto.from(applicationService.getStatistics(instrument));
     }
 }

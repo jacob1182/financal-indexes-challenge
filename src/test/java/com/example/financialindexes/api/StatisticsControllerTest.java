@@ -65,4 +65,25 @@ class StatisticsControllerTest {
                 .andExpect(jsonPath("$.count", is(0)))
         ;
     }
+
+    @Test
+    public void retrieveStatisticsPerInstrument() throws Exception {
+
+        var timestamp = System.currentTimeMillis();
+        List.of(
+                genTick("AAA", 325, timestamp - 61_000),
+                genTick("BBB",100, timestamp - 50_000),
+                genTick("AAA",150, timestamp - 40_000),
+                genTick("BBB",250, timestamp - 30_000),
+                genTick("AAA",200, timestamp - 20_000)
+        ).forEach(applicationService::receiveTick);
+
+        mvc.perform(get("/statistics/AAA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.min", is(150d)))
+                .andExpect(jsonPath("$.max", is(200d)))
+                .andExpect(jsonPath("$.avg", is(350d/2)))
+                .andExpect(jsonPath("$.count", is(2)))
+        ;
+    }
 }

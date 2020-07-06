@@ -21,7 +21,11 @@ public class IndexUtils {
     }
 
     public static Tick genTick(double price, long timestamp) {
-        return new Tick(instruments.get(random.nextInt(instruments.size())), BigDecimal.valueOf(price), timestamp);
+        return genTick(instruments.get(random.nextInt(instruments.size())), price, timestamp);
+    }
+
+    public static Tick genTick(String instrument, double price, long timestamp) {
+        return new Tick(instrument, BigDecimal.valueOf(price), timestamp);
     }
 
     public static void assertStatistic(StatisticsSnapshot snapshot, Collection<Tick> ticks) {
