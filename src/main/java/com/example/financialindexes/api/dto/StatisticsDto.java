@@ -13,6 +13,12 @@ public class StatisticsDto {
     long count;
 
     public static StatisticsDto from(Statistics statistics) {
-        return of(statistics.getMin(), statistics.getMax(), statistics.getAvg(), statistics.getCount());
+        var min = statistics.getMin().doubleValue();
+        var max = statistics.getMax().doubleValue();
+        return of(
+                BigDecimal.valueOf(min == Double.MAX_VALUE ? 0 : min),
+                BigDecimal.valueOf(max == Double.MIN_VALUE ? 0 : max),
+                statistics.getAvg(),
+                statistics.getCount());
     }
 }

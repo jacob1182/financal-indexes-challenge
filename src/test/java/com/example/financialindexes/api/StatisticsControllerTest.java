@@ -1,6 +1,7 @@
 package com.example.financialindexes.api;
 
 import com.example.financialindexes.app.IndexApplicationService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +28,11 @@ class StatisticsControllerTest {
     @Autowired
     private IndexApplicationService applicationService;
 
+    @AfterEach
+    void cleanUp() {
+        applicationService.clearTicks();
+    }
+
     @Test
     public void retrieveStatistics() throws Exception {
 
@@ -45,6 +51,18 @@ class StatisticsControllerTest {
                 .andExpect(jsonPath("$.max", is(250d)))
                 .andExpect(jsonPath("$.avg", is(700d/4)))
                 .andExpect(jsonPath("$.count", is(4)))
+        ;
+    }
+
+    @Test
+    public void retrieveEmptyStatistics() throws Exception {
+
+        mvc.perform(get("/statistics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.min", is(0d)))
+                .andExpect(jsonPath("$.max", is(0d)))
+                .andExpect(jsonPath("$.avg", is(0)))
+                .andExpect(jsonPath("$.count", is(0)))
         ;
     }
 }
