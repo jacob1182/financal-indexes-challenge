@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.example.financialindexes.TickUtils.genTick;
+import static com.example.financialindexes.IndexUtils.genTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class StatisticsTest {

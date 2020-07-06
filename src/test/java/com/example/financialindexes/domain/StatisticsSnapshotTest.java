@@ -2,12 +2,11 @@ package com.example.financialindexes.domain;
 
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Random;
 import java.util.TreeSet;
 
-import static com.example.financialindexes.TickUtils.genTick;
+import static com.example.financialindexes.IndexUtils.assertStatistic;
+import static com.example.financialindexes.IndexUtils.genTick;
 import static java.util.Comparator.comparing;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,7 +23,7 @@ class StatisticsSnapshotTest {
             var price = (double) (random.nextInt(100) + 100) / 100;
             var tick = genTick(price, timestamp + i);
             var time = System.currentTimeMillis();
-            snapshot = snapshot.withTick(tick);
+            snapshot = snapshot.withTick(time, tick);
             timeSum += System.currentTimeMillis() - time;
         }
         assertThat(timeSum).isLessThanOrEqualTo(150);
@@ -40,7 +39,7 @@ class StatisticsSnapshotTest {
             var timestamp = System.currentTimeMillis() - i * 1_000;
             var tick = genTick(price, timestamp);
             ticks.add(tick);
-            snapshot = snapshot.withTick(tick);
+            snapshot = snapshot.withTick(System.currentTimeMillis(), tick);
             assertStatistic(snapshot, ticks);
         }
     }
@@ -55,7 +54,7 @@ class StatisticsSnapshotTest {
             var price = 100d + random.nextInt(100);
             var tick = genTick(price, timestamp + i * 2);
             ticks.add(tick);
-            snapshot = snapshot.withTick(tick);
+            snapshot = snapshot.withTick(System.currentTimeMillis(), tick);
         }
 
         assertStatistic(snapshot, ticks);
@@ -65,7 +64,7 @@ class StatisticsSnapshotTest {
         var tick = genTick(200, System.currentTimeMillis());
         ticks.add(tick);
 
-        snapshot = snapshot.withTick(tick);
+        snapshot = snapshot.withTick(System.currentTimeMillis(), tick);
         assertStatistic(snapshot, ticks);
     }
 
@@ -80,7 +79,7 @@ class StatisticsSnapshotTest {
         for (int i = 0; i < 100; i++) {
             var price = (double) (random.nextInt(100) + 100) / 100;
             var tick = genTick(price, timestamp + 10 * i);
-            snapshot = snapshot.withTick(tick);
+            snapshot = snapshot.withTick(System.currentTimeMillis(), tick);
             ticks.add(tick);
         }
 
@@ -96,36 +95,5 @@ class StatisticsSnapshotTest {
         }
 
         assertThat(timeSum).isLessThanOrEqualTo(5);
-    }
-
-    private void assertStatistic(StatisticsSnapshot snapshot, Collection<Tick> ticks) {
-        var time = System.currentTimeMillis();
-        var threshold = time - 60_000;
-
-        if (!snapshot.isFresh(time) && !snapshot.getSource().isEmpty()) {
-            var startTimestamp = snapshot.getSource().first().getTimestamp();
-            assertThat(threshold - startTimestamp).isLessThanOrEqualTo(2); // allow diff time error up to 2ms
-            threshold = startTimestamp;
-        }
-
-        var minPrice = new BigDecimal(Double.MAX_VALUE);
-        var maxPrice = new BigDecimal(Double.MIN_VALUE);
-        var sumPrice = BigDecimal.ZERO;
-        var count = 0L;
-
-        for (Tick current : ticks) {
-            if (current.getTimestamp() >= threshold) {
-                minPrice = minPrice.min(current.getPrice());
-                maxPrice = maxPrice.max(current.getPrice());
-                sumPrice = sumPrice.add(current.getPrice());
-                count++;
-            }
-        }
-
-        var stat = snapshot.getStatistics();
-        assertThat(stat.getMin().doubleValue()).isEqualTo(minPrice.doubleValue());
-        assertThat(stat.getMax().doubleValue()).isEqualTo(maxPrice.doubleValue());
-        assertThat(stat.getSum()).isEqualTo(sumPrice);
-        assertThat(stat.getCount()).isEqualTo(count);
     }
 }
