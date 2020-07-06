@@ -53,7 +53,7 @@ I was working on a [MultiplePriorityQueue](src/test/java/com/example/financialin
  
 Each node point to different nodes depending on the comparator used. 
 
-Having a single linked nodes allows you to have the first/last value in `O(1)`. But additions, in this case takes `O(n*n)`. Is possible to use the same idea but using Balanced Tree it will improve additions to `m*log(n)` time, being `m` the amount of comparators used, `m = 2` in this case.
+Having a single linked nodes allows you to have the first/last value in `O(1)`. But additions, in this case takes `O(m*n)`. Is possible to use the same idea but using Balanced Tree it will improve additions to `m*log(n)` time, being `m` the amount of comparators used, `m = 2` in this case.
 
 #### Personal considerations
 
