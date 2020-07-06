@@ -14,8 +14,8 @@ public class Tick {
 
     /**
      * Returns whether the tick timestamp is not older than 60 seconds
-     * */
-    public boolean isFresh() {
-        return System.currentTimeMillis() - 60000 < timestamp;
+     */
+    public boolean isFresh(long currentTimestamp) {
+        return currentTimestamp - 60_000 <= timestamp;
     }
 }
