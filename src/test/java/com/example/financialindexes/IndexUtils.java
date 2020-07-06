@@ -5,18 +5,23 @@ import com.example.financialindexes.domain.Tick;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IndexUtils {
 
+    public static List<String> instruments = List.of("AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH");
+    private static Random random = new Random();
+
     public static Tick genTick(long secondsOlder) {
         return genTick(143.82d, System.currentTimeMillis() - secondsOlder * 1000);
     }
 
     public static Tick genTick(double price, long timestamp) {
-        return new Tick("IBM.N", BigDecimal.valueOf(price), timestamp);
+        return new Tick(instruments.get(random.nextInt(instruments.size())), BigDecimal.valueOf(price), timestamp);
     }
 
     public static void assertStatistic(StatisticsSnapshot snapshot, Collection<Tick> ticks) {
