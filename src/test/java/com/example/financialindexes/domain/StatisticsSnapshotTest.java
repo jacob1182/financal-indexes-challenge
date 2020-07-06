@@ -96,4 +96,20 @@ class StatisticsSnapshotTest {
 
         assertThat(timeSum).isLessThanOrEqualTo(5);
     }
+
+    @Test
+    void shouldReturnSameStatisticsWhenAddingNullTick() {
+        var snapshot1 = StatisticsSnapshot.getNewInstance();
+        var snapshot2 = snapshot1.withTick(0, null);
+
+        assertThat(snapshot1).isEqualTo(snapshot2);
+    }
+
+    @Test
+    void shouldReturnSameStatisticsWhenAddingOldTick() {
+        var snapshot1 = StatisticsSnapshot.getNewInstance();
+        var snapshot2 = snapshot1.withTick(System.currentTimeMillis(), genTick(61));
+
+        assertThat(snapshot1).isEqualTo(snapshot2);
+    }
 }
