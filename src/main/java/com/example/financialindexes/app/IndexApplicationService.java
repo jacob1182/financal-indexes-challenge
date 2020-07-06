@@ -48,7 +48,7 @@ public class IndexApplicationService {
         statSnapshots.put(instrument, snapshot);
     }
 
-    @Scheduled(fixedRate = 500)
+    @Scheduled(fixedRate = 200)
     public void asyncRecalculateStats() {
         try {
             if (!semaphore.tryAcquire())
