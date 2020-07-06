@@ -49,8 +49,9 @@ class IndexApplicationServiceTest {
     private Callable<Integer> receiveStatisticsRequest(List<Tick> ticks, CountDownLatch latch) {
         return () -> {
             try {
+                var instrument = IndexApplicationService.ALL_INSTRUMENTS;
                 for (int i = 0; i < 20; i++) {
-                    var snapshot = applicationService.getStatSnapshot();
+                    var snapshot = applicationService.getStatSnapshots().get(instrument);
                     var source = new ArrayList<>(ticks);
                     assertStatistic(snapshot, source);
                     Thread.sleep(100);
