@@ -64,14 +64,21 @@ class Node<T> {
 public class RedBlackTree<T> {
     private Node<T> TNULL = (Node<T>) Node.TNULL;
     private Map<String, Node<T>> root = new HashMap<>();
+    private Map<String, Node<T>> first = new HashMap<>();
+    private Map<String, Node<T>> last = new HashMap<>();
     private Map<String, Comparator<T>> cmp;
     private List<String> aliases;
+    private int size = 0;
 
 
 
     public RedBlackTree(Map<String, Comparator<T>> cmp) {
         this.cmp = cmp;
         aliases = new ArrayList<>(cmp.keySet());
+    }
+
+    public int size() {
+        return size;
     }
 
     public long cmp(String alias, T val1, T val2) {
@@ -348,7 +355,7 @@ public class RedBlackTree<T> {
     }
 
     public T first(String alias) {
-        return minimum(alias, root(alias)).data;
+        return first.get(alias).data;
     }
 
     // find the node with the minimum key
@@ -360,7 +367,7 @@ public class RedBlackTree<T> {
     }
 
     public T last(String alias) {
-        return maximum(alias, root(alias)).data;
+        return last.get(alias).data;
     }
 
     // find the node with the maximum key
@@ -446,9 +453,31 @@ public class RedBlackTree<T> {
         x.parent(alias, y);
     }
 
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
     public void add(T key) {
         var node = new Node<>(key);
-        aliases.forEach(alias -> add(alias, node));
+        aliases.forEach(alias -> {
+            add(alias, node);
+
+            if (isEmpty()) {
+                first.put(alias, node);
+                last.put(alias, node);
+            } else {
+                var firstNode = first.getOrDefault(alias, node);
+                if (cmp(alias, key, firstNode.data) < 0)
+                    first.put(alias, node);
+                else {
+                    var lastNode = last.getOrDefault(alias, node);
+                    if (cmp(alias, key, lastNode.data) > 0)
+                        last.put(alias, node);
+                }
+            }
+        });
+
+        size++;
     }
 
         // insert the key to the tree in its appropriate position
@@ -499,9 +528,24 @@ public class RedBlackTree<T> {
     }
 
     public T pollFirst(String alias) {
-        var firstNode = minimum(alias, root(alias));
+        var firstNode = first.get(alias);
         var firstValue = firstNode.data;
-        aliases.forEach(theAlias  -> deleteNodeHelper(theAlias, firstNode, firstValue));
+        size--;
+
+        if (size == 0) {
+            root.clear();
+            first.clear();
+            last.clear();
+        } else {
+            aliases.forEach(theAlias -> {
+                deleteNodeHelper(theAlias, firstNode, firstValue);
+                var rootNode = root(theAlias);
+                first.put(theAlias, minimum(theAlias, rootNode));
+
+                if (!alias.equals(theAlias))
+                    last.put(theAlias, maximum(theAlias, rootNode));
+            });
+        }
 
         return firstValue;
     }
@@ -510,6 +554,7 @@ public class RedBlackTree<T> {
     public void deleteNode(T data) {
         var alias = aliases.get(0);
         deleteNodeHelper(alias, root(alias), data);
+        size--;
     }
 
     // print the tree structure on the screen
