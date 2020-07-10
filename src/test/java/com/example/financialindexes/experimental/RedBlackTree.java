@@ -6,6 +6,8 @@ package com.example.financialindexes.experimental;
 // Author: Algorithm Tutor
 // Tutorial URL: https://algorithmtutor.com/Data-Structures/Tree/Red-Black-Trees/
 
+import java.util.Comparator;
+
 // data structure that represents a node in the tree
 class Node<T> {
     T data; // holds the key
@@ -17,9 +19,20 @@ class Node<T> {
 
 
 // class RedBlackTree implements the operations in Red Black Tree
-public class RedBlackTree<T extends Comparable<T>> {
+public class RedBlackTree<T> {
     private Node<T> root;
     private Node<T> TNULL;
+    private Comparator<T> cmp;
+
+
+    public RedBlackTree(Comparator<T> cmp) {
+        TNULL = new Node<T>();
+        TNULL.color = 0;
+        TNULL.left = null;
+        TNULL.right = null;
+        root = TNULL;
+        this.cmp = cmp;
+    }
 
     private void preOrderHelper(Node<T> node) {
         if (node != TNULL) {
@@ -50,7 +63,7 @@ public class RedBlackTree<T extends Comparable<T>> {
             return node;
         }
 
-        if (key.compareTo(node.data) < 0) {
+        if (cmp.compare(key, node.data) < 0) {
             return searchTreeHelper(node.left, key);
         }
         return searchTreeHelper(node.right, key);
@@ -142,11 +155,11 @@ public class RedBlackTree<T extends Comparable<T>> {
         Node<T> z = TNULL;
         Node<T> x, y;
         while (node != TNULL){
-            if (node.data.compareTo(key) == 0) {
+            if (cmp.compare(node.data, key) == 0) {
                 z = node;
             }
 
-            if (node.data.compareTo(key) <= 0) {
+            if (cmp.compare(node.data, key) <= 0) {
                 node = node.right;
             } else {
                 node = node.left;
@@ -256,14 +269,6 @@ public class RedBlackTree<T extends Comparable<T>> {
             printHelper(root.left, indent, false);
             printHelper(root.right, indent, true);
         }
-    }
-
-    public RedBlackTree() {
-        TNULL = new Node<T>();
-        TNULL.color = 0;
-        TNULL.left = null;
-        TNULL.right = null;
-        root = TNULL;
     }
 
     // Pre-Order traversal
@@ -397,7 +402,7 @@ public class RedBlackTree<T extends Comparable<T>> {
 
         while (x != TNULL) {
             y = x;
-            if (node.data.compareTo(x.data) < 0) {
+            if (cmp.compare(node.data, x.data) < 0) {
                 x = x.left;
             } else {
                 x = x.right;
@@ -408,7 +413,7 @@ public class RedBlackTree<T extends Comparable<T>> {
         node.parent = y;
         if (y == null) {
             root = node;
-        } else if (node.data.compareTo(y.data) < 0) {
+        } else if (cmp.compare(node.data, y.data) < 0) {
             y.left = node;
         } else {
             y.right = node;
@@ -444,7 +449,7 @@ public class RedBlackTree<T extends Comparable<T>> {
     }
 
     public static void main(String [] args){
-        RedBlackTree<Integer> bst = new RedBlackTree<>();
+        RedBlackTree<Integer> bst = new RedBlackTree<>(Integer::compareTo);
         bst.insert(8);
         bst.insert(18);
         bst.insert(5);
