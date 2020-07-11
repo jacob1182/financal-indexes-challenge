@@ -1,25 +1,25 @@
 package com.example.financialindexes.domain;
 
+import com.example.financialindexes.utils.MultiplePriorityTree;
 import lombok.Value;
 
 import java.math.BigDecimal;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
 
-import static java.util.Comparator.comparing;
+import static com.example.financialindexes.domain.Statistics.*;
 
 @Value(staticConstructor = "of")
 public class StatisticsSnapshot {
     Statistics statistics;
-    TreeSet<Tick> source;
+    MultiplePriorityTree<Tick> source;
     long startTimestamp;
 
     public static StatisticsSnapshot getNewInstance() {
-        return of(Statistics.EMPTY, new TreeSet<>(comparing(Tick::getTimestamp)));
+        return of(Statistics.EMPTY, MultiplePriorityTree.of(SORT_BY_PRICE, SORT_BY_TIME));
     }
 
-    private static StatisticsSnapshot of(Statistics stat, TreeSet<Tick> source) {
-        var startTimestamp = source.isEmpty() ? 0 : source.first().getTimestamp();
+    private static StatisticsSnapshot of(Statistics stat, MultiplePriorityTree<Tick> source) {
+        var startTimestamp = source.isEmpty() ? 0 : source.first(SORT_BY_TIME_KEY).getTimestamp();
         return of(stat, source, startTimestamp);
     }
 
@@ -42,22 +42,24 @@ public class StatisticsSnapshot {
             // adding new tick modify affect statistics values
             return !recalculate && (isFresh || isEdge)
                     ? statistics.withTick(tick, sumOldPrice, source.size())
-                    : Statistics.calculate(source);
+                    : statistics.calculate(sumOldPrice.subtract(tick.getPrice()), source);
         });
 
         return of(stat, source);
     }
 
     public StatisticsSnapshot recalculate(long time) {
-        if(source.isEmpty() || isFresh(time))
+        if (source.isEmpty() || isFresh(time))
             return this;
 
-        var stat =  removeOldTicks(time, (sumOldPrice, recalculate) -> recalculate
-                        ? Statistics.calculate(source)
-                        : Statistics.of(statistics.getMin(),
-                            statistics.getMax(),
-                            statistics.getSum().subtract(sumOldPrice),
-                            source.size()));
+        var stat = removeOldTicks(time, (sumOldPrice, recalculate) -> recalculate
+                ? statistics.calculate(sumOldPrice, source) // O(1)
+                : Statistics.of( // O(1)
+                    statistics.getMin(),
+                    statistics.getMax(),
+                    statistics.getSum().subtract(sumOldPrice),
+                    source.size()
+        ));
 
         return of(stat, source);
     }
@@ -65,13 +67,12 @@ public class StatisticsSnapshot {
     private Statistics removeOldTicks(long time, BiFunction<BigDecimal, Boolean, Statistics> then) {
         var sumOldPrice = BigDecimal.ZERO;
         var forceRecalculation = false;
-        var it = source.iterator();
         Tick current;
 
-        while (it.hasNext() && !(current = it.next()).isFresh(time)) { // O(n)
+        while (!source.isEmpty() && !(current = source.first(SORT_BY_TIME_KEY) /* O(1) */).isFresh(time)) { // O(n*log(n))
             sumOldPrice = sumOldPrice.add(current.getPrice());
             forceRecalculation |= statistics.isEdge(current);
-            it.remove();
+            source.pollFirst(SORT_BY_TIME_KEY); // O(log(n))
         }
 
         return then.apply(sumOldPrice, forceRecalculation);

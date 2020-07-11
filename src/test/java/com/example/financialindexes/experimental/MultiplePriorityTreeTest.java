@@ -1,6 +1,7 @@
 package com.example.financialindexes.experimental;
 
 import com.example.financialindexes.domain.Tick;
+import com.example.financialindexes.utils.MultiplePriorityTree;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
