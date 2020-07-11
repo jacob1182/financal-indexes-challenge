@@ -8,6 +8,9 @@ package com.example.financialindexes.experimental;
 
 import java.util.*;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 // data structure that represents a node in the tree
 class Node<T> {
     static final Node<?> TNULL = new Node<>(null);
@@ -70,7 +73,10 @@ public class RedBlackTree<T> {
     private List<String> aliases;
     private int size = 0;
 
-
+    @SafeVarargs
+    public static <T> RedBlackTree<T> of(Map.Entry<String, Comparator<T>> ...entries) {
+        return new RedBlackTree<T>(Map.ofEntries(entries));
+    }
 
     public RedBlackTree(Map<String, Comparator<T>> cmp) {
         this.cmp = cmp;
@@ -81,7 +87,7 @@ public class RedBlackTree<T> {
         return size;
     }
 
-    public long cmp(String alias, T val1, T val2) {
+    private long cmp(String alias, T val1, T val2) {
         return cmp.get(alias).compare(val1, val2);
     }
 
@@ -359,7 +365,7 @@ public class RedBlackTree<T> {
     }
 
     // find the node with the minimum key
-    public Node<T> minimum(String alias, Node<T> node) {
+    private Node<T> minimum(String alias, Node<T> node) {
         while (node.left(alias) != TNULL) {
             node = node.left(alias);
         }
@@ -371,7 +377,7 @@ public class RedBlackTree<T> {
     }
 
     // find the node with the maximum key
-    public Node<T> maximum(String alias, Node<T> node) {
+    private Node<T> maximum(String alias, Node<T> node) {
         while (node.right(alias) != TNULL) {
             node = node.right(alias);
         }
@@ -379,7 +385,7 @@ public class RedBlackTree<T> {
     }
 
     // find the successor of a given node
-    public Node<T> successor(String alias, Node<T> x) {
+    private Node<T> successor(String alias, Node<T> x) {
         // if the right subtree is not null,
         // the successor is the leftmost node in the
         // right subtree
@@ -390,7 +396,7 @@ public class RedBlackTree<T> {
         // else it is the lowest ancestor of x whose
         // left child is also an ancestor of x.
         Node<T> y = x.parent(alias);
-        while (y != TNULL && x == y.right(alias)) {
+        while (y != null && x == y.right(alias)) {
             x = y;
             y = y.parent(alias);
         }
@@ -398,7 +404,7 @@ public class RedBlackTree<T> {
     }
 
     // find the predecessor of a given node
-    public Node<T> predecessor(String alias, Node<T> x) {
+    private Node<T> predecessor(String alias, Node<T> x) {
         // if the left subtree is not null,
         // the predecessor is the rightmost node in the
         // left subtree
@@ -407,7 +413,7 @@ public class RedBlackTree<T> {
         }
 
         Node<T> y = x.parent(alias);
-        while (y != TNULL && x == y.left(alias)) {
+        while (y != null && x == y.left(alias)) {
             x = y;
             y = y.parent(alias);
         }
@@ -416,7 +422,7 @@ public class RedBlackTree<T> {
     }
 
     // rotate left at node x
-    public void leftRotate(String alias, Node<T> x) {
+    private void leftRotate(String alias, Node<T> x) {
         Node<T> y = x.right(alias);
         x.right(alias, y.left(alias));
         if (y.left(alias) != TNULL) {
@@ -435,7 +441,7 @@ public class RedBlackTree<T> {
     }
 
     // rotate right at node x
-    public void rightRotate(String alias, Node<T> x) {
+    private void rightRotate(String alias, Node<T> x) {
         Node<T> y = x.left(alias);
         x.left(alias, y.right(alias));
         if (y.right(alias) != TNULL) {
@@ -523,10 +529,6 @@ public class RedBlackTree<T> {
         fixInsert(alias, node);
     }
 
-    public Node<T> getRoot(String alias){
-        return root(alias);
-    }
-
     public T pollFirst(String alias) {
         var firstNode = first.get(alias);
         var firstValue = firstNode.data;
@@ -538,23 +540,19 @@ public class RedBlackTree<T> {
             last.clear();
         } else {
             aliases.forEach(theAlias -> {
+                var successor = successor(theAlias, firstNode);
+                var predecessor = predecessor(theAlias, firstNode);
                 deleteNodeHelper(theAlias, firstNode, firstValue);
-                var rootNode = root(theAlias);
-                first.put(theAlias, minimum(theAlias, rootNode));
 
-                if (!alias.equals(theAlias))
-                    last.put(theAlias, maximum(theAlias, rootNode));
+                if (isNull(predecessor) && nonNull(successor))
+                    first.put(theAlias, successor);
+
+                if (!alias.equals(theAlias) && isNull(successor))
+                    last.put(theAlias, predecessor);
             });
         }
 
         return firstValue;
-    }
-
-    // delete the node from the tree
-    public void deleteNode(T data) {
-        var alias = aliases.get(0);
-        deleteNodeHelper(alias, root(alias), data);
-        size--;
     }
 
     // print the tree structure on the screen
@@ -563,22 +561,5 @@ public class RedBlackTree<T> {
                 .peek(System.out::println)
                 .forEach(alias ->
                 printHelper(alias, root(alias), "", true));
-    }
-
-    public static void main(String [] args){
-        RedBlackTree<Integer> bst = new RedBlackTree<>(Map.of(
-                "sorted", Integer::compareTo,
-                "reversed", ((Comparator<Integer>) Integer::compare).reversed()
-        ));
-        bst.add(8);
-        bst.add(18);
-        bst.add(5);
-        bst.add(15);
-        bst.add(17);
-        bst.add(25);
-        bst.add(40);
-        bst.add(80);
-        bst.deleteNode(25);
-        bst.prettyPrint();
     }
 }
