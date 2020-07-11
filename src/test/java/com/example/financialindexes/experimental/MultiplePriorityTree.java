@@ -64,7 +64,7 @@ class Node<T> {
 }
 
 // class RedBlackTree implements the operations in Red Black Tree
-public class RedBlackTree<T> {
+public class MultiplePriorityTree<T> {
     private Node<T> TNULL = (Node<T>) Node.TNULL;
     private Map<String, Node<T>> root = new HashMap<>();
     private Map<String, Node<T>> first = new HashMap<>();
@@ -74,11 +74,11 @@ public class RedBlackTree<T> {
     private int size = 0;
 
     @SafeVarargs
-    public static <T> RedBlackTree<T> of(Map.Entry<String, Comparator<T>> ...entries) {
-        return new RedBlackTree<T>(Map.ofEntries(entries));
+    public static <T> MultiplePriorityTree<T> of(Map.Entry<String, Comparator<T>> ...entries) {
+        return new MultiplePriorityTree<T>(Map.ofEntries(entries));
     }
 
-    public RedBlackTree(Map<String, Comparator<T>> cmp) {
+    public MultiplePriorityTree(Map<String, Comparator<T>> cmp) {
         this.cmp = cmp;
         aliases = new ArrayList<>(cmp.keySet());
     }

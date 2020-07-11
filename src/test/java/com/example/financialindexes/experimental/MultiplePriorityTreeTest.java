@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RedBlackTreeTest {
+public class MultiplePriorityTreeTest {
 
     @Test
     void testRedBlackTree() {
@@ -29,7 +29,7 @@ public class RedBlackTreeTest {
         var TIME = "time";
         var PRICE = "price";
 
-        var ticks = new RedBlackTree<>(
+        var ticks = new MultiplePriorityTree<>(
                 Map.of(
                         TIME, comparing(Tick::getTimestamp),
                         PRICE, comparing(Tick::getPrice)
