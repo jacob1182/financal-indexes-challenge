@@ -138,64 +138,69 @@ public class MultiplePriorityTree<T> {
     private void fixDelete(String alias, Node<T> x) {
         Node<T> s;
         while (x != root(alias) && x.color(alias) == 0) {
-            if (x == x.parent(alias).left(alias)) {
-                s = x.parent(alias).right(alias);
+            var xParent = x.parent(alias);
+            if (x == xParent.left(alias)) {
+                s = xParent.right(alias);
                 if (s.color(alias) == 1) {
                     // case 3.1
                     s.color(alias, 0);
-                    x.parent(alias).color(alias, 1);
-                    leftRotate(alias, x.parent(alias));
-                    s = x.parent(alias).right(alias);
+                    xParent.color(alias, 1);
+                    leftRotate(alias, xParent);
+                    xParent = x.parent(alias);
+                    s = xParent.right(alias);
                 }
 
                 if (s.left(alias).color(alias) == 0 && s.right(alias).color(alias) == 0) {
                     // case 3.2
                     s.color(alias, 1);
-                    x = x.parent(alias);
+                    x = xParent;
                 } else {
                     if (s.right(alias).color(alias) == 0) {
                         // case 3.3
                         s.left(alias).color(alias, 0);
                         s.color(alias, 1);
                         rightRotate(alias, s);
-                        s = x.parent(alias).right(alias);
+                        xParent = x.parent(alias);
+                        s = xParent.right(alias);
                     }
 
                     // case 3.4
-                    s.color(alias, x.parent(alias).color(alias));
-                    x.parent(alias).color(alias,  0);
+                    s.color(alias, xParent.color(alias));
+                    xParent.color(alias,  0);
                     s.right(alias).color(alias, 0);
-                    leftRotate(alias, x.parent(alias));
+                    leftRotate(alias, xParent);
                     x = root(alias);
                 }
             } else {
-                s = x.parent(alias).left(alias);
+                s = xParent.left(alias);
                 if (s.color(alias) == 1) {
                     // case 3.1
                     s.color(alias, 0);
-                    x.parent(alias).color(alias, 1);
-                    rightRotate(alias, x.parent(alias));
-                    s = x.parent(alias).left(alias);
+                    xParent.color(alias, 1);
+                    rightRotate(alias, xParent);
+                    xParent = x.parent(alias);
+                    s = xParent.left(alias);
                 }
 
                 if (s.right(alias).color(alias) == 0 && s.right(alias).color(alias) == 0) {
                     // case 3.2
                     s.color(alias, 1);
-                    x = x.parent(alias);
+                    x = xParent;
                 } else {
                     if (s.left(alias).color(alias) == 0) {
                         // case 3.3
                         s.right(alias).color(alias,  0);
                         s.color(alias, 1);
                         leftRotate(alias, s);
-                        s = x.parent(alias).left(alias);
+                        xParent = x.parent(alias);
+                        s = xParent.left(alias);
                     }
 
                     // case 3.4
-                    s.color(alias, x.parent(alias).color(alias));
-                    x.parent(alias).color(alias,  0);
+                    s.color(alias, xParent.color(alias));
+                    xParent.color(alias,  0);
                     s.left(alias).color(alias, 0);
-                    rightRotate(alias, x.parent(alias));
+                    rightRotate(alias, xParent);
                     x = root(alias);
                 }
             }
@@ -205,14 +210,15 @@ public class MultiplePriorityTree<T> {
 
 
     private void rbTransplant(String alias, Node<T> u, Node<T> v){
-        if (u.parent(alias) == null) {
+        var uParent = u.parent(alias);
+        if (uParent == null) {
             root(alias, v);
-        } else if (u == u.parent(alias).left(alias)){
-            u.parent(alias).left(alias, v);
+        } else if (u == uParent.left(alias)){
+            uParent.left(alias, v);
         } else {
-            u.parent(alias).right(alias, v);
+            uParent.right(alias, v);
         }
-        v.parent(alias, u.parent(alias));
+        v.parent(alias, uParent);
     }
 
     private void deleteNodeHelper(String alias, Node<T> node, T key) {
@@ -237,27 +243,29 @@ public class MultiplePriorityTree<T> {
         }
 
         y = z;
+        var zLeft = z.left(alias);
+        var zRight = z.right(alias);
         int yOriginalColor = y.color(alias);
-        if (z.left(alias) == TNULL) {
-            x = z.right(alias);
-            rbTransplant(alias, z, z.right(alias));
-        } else if (z.right(alias) == TNULL) {
-            x = z.left(alias);
-            rbTransplant(alias, z, z.left(alias));
+        if (zLeft == TNULL) {
+            x = zRight;
+            rbTransplant(alias, z, zRight);
+        } else if (zRight == TNULL) {
+            x = zLeft;
+            rbTransplant(alias, z, zLeft);
         } else {
-            y = minimum(alias, z.right(alias));
+            y = minimum(alias, zRight);
             yOriginalColor = y.color(alias);
             x = y.right(alias);
             if (y.parent(alias) == z) {
                 x.parent(alias, y);
             } else {
                 rbTransplant(alias, y, y.right(alias));
-                y.right(alias, z.right(alias));
+                y.right(alias, zRight);
                 y.right(alias).parent(alias, y);
             }
 
             rbTransplant(alias, z, y);
-            y.left(alias, z.left(alias));
+            y.left(alias, zLeft);
             y.left(alias).parent(alias, y);
             y.color(alias, z.color(alias));
         }
@@ -270,44 +278,53 @@ public class MultiplePriorityTree<T> {
     private void fixInsert(String alias, Node<T> k){
         Node<T> u;
         while (k.parent(alias).color(alias) == 1) {
-            if (k.parent(alias) == k.parent(alias).parent(alias).right(alias)) {
-                u = k.parent(alias).parent(alias).left(alias); // uncle
+            var kParent = k.parent(alias);
+            var kGParent = kParent.parent(alias);
+            var rUncle = kGParent.right(alias);
+            var lUncle = kGParent.left(alias);
+
+            if (kParent == rUncle) {
+                u = lUncle; // uncle
                 if (u.color(alias) == 1) {
                     // case 3.1
                     u.color(alias,  0);
-                    k.parent(alias).color(alias, 0);
-                    k.parent(alias).parent(alias).color(alias, 1);
-                    k = k.parent(alias).parent(alias);
+                    kParent.color(alias, 0);
+                    kGParent.color(alias, 1);
+                    k = kGParent;
                 } else {
-                    if (k == k.parent(alias).left(alias)) {
+                    if (k == kParent.left(alias)) {
                         // case 3.2.2
-                        k = k.parent(alias);
+                        k = kParent;
                         rightRotate(alias, k);
+                        kParent = k.parent(alias);
+                        kGParent = kParent.parent(alias);
                     }
                     // case 3.2.1
-                    k.parent(alias).color(alias, 0);
-                    k.parent(alias).parent(alias).color(alias, 1);
-                    leftRotate(alias, k.parent(alias).parent(alias));
+                    kParent.color(alias, 0);
+                    kGParent.color(alias, 1);
+                    leftRotate(alias, kGParent);
                 }
             } else {
-                u = k.parent(alias).parent(alias).right(alias); // uncle
+                u = rUncle; // uncle
 
                 if (u.color(alias) == 1) {
                     // mirror case 3.1
                     u.color(alias, 0);
-                    k.parent(alias).color(alias, 0);
-                    k.parent(alias).parent(alias).color(alias, 1);
-                    k = k.parent(alias).parent(alias);
+                    kParent.color(alias, 0);
+                    kGParent.color(alias, 1);
+                    k = kGParent;
                 } else {
-                    if (k == k.parent(alias).right(alias)) {
+                    if (k == kParent.right(alias)) {
                         // mirror case 3.2.2
-                        k = k.parent(alias);
+                        k = kParent;
                         leftRotate(alias, k);
+                        kParent = k.parent(alias);
+                        kGParent = kParent.parent(alias);
                     }
                     // mirror case 3.2.1
-                    k.parent(alias).color(alias, 0);
-                    k.parent(alias).parent(alias).color(alias, 1);
-                    rightRotate(alias, k.parent(alias).parent(alias));
+                    kParent.color(alias, 0);
+                    kGParent.color(alias, 1);
+                    rightRotate(alias, kGParent);
                 }
             }
             if (k == root(alias)) {
@@ -424,17 +441,20 @@ public class MultiplePriorityTree<T> {
     // rotate left at node x
     private void leftRotate(String alias, Node<T> x) {
         Node<T> y = x.right(alias);
-        x.right(alias, y.left(alias));
-        if (y.left(alias) != TNULL) {
-            y.left(alias).parent(alias, x);
+        var yLeft = y.left(alias);
+        var xParent = x.parent(alias);
+
+        x.right(alias, yLeft);
+        if (yLeft != TNULL) {
+            yLeft.parent(alias, x);
         }
-        y.parent(alias, x.parent(alias));
-        if (x.parent(alias) == null) {
+        y.parent(alias, xParent);
+        if (xParent == null) {
             root(alias, y);
-        } else if (x == x.parent(alias).left(alias)) {
-            x.parent(alias).left(alias, y);
+        } else if (x == xParent.left(alias)) {
+            xParent.left(alias, y);
         } else {
-            x.parent(alias).right(alias, y);
+            xParent.right(alias, y);
         }
         y.left(alias, x);
         x.parent(alias, y);
@@ -443,17 +463,20 @@ public class MultiplePriorityTree<T> {
     // rotate right at node x
     private void rightRotate(String alias, Node<T> x) {
         Node<T> y = x.left(alias);
-        x.left(alias, y.right(alias));
-        if (y.right(alias) != TNULL) {
-            y.right(alias).parent(alias, x);
+        var yRight = y.right(alias);
+        var xParent = x.parent(alias);
+
+        x.left(alias, yRight);
+        if (yRight != TNULL) {
+            yRight.parent(alias, x);
         }
-        y.parent(alias, x.parent(alias));
-        if (x.parent(alias) == null) {
+        y.parent(alias, xParent);
+        if (xParent == null) {
             root(alias, y);
-        } else if (x == x.parent(alias).right(alias)) {
-            x.parent(alias).right(alias, y);
+        } else if (x == xParent.right(alias)) {
+            xParent.right(alias, y);
         } else {
-            x.parent(alias).left(alias, y);
+            xParent.left(alias, y);
         }
         y.right(alias, x);
         x.parent(alias, y);
@@ -463,7 +486,7 @@ public class MultiplePriorityTree<T> {
         return size == 0;
     }
 
-    public void add(T key) {
+    public synchronized void add(T key) {
         var node = new Node<>(key);
         aliases.forEach(alias -> {
             add(alias, node);
@@ -526,7 +549,11 @@ public class MultiplePriorityTree<T> {
         }
 
         // Fix the tree
-        fixInsert(alias, node);
+        try {
+            fixInsert(alias, node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public T pollFirst(String alias) {
