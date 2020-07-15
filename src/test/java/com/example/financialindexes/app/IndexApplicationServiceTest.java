@@ -28,22 +28,45 @@ class IndexApplicationServiceTest {
     void testConcurrentStatisticsCalculation() throws InterruptedException {
         var time = System.currentTimeMillis() - 60_000;
         var ticks = synchronizedList(new ArrayList<Tick>());
-        var latch = new CountDownLatch(6);
+        var latch = new CountDownLatch(5);
 
         Callable<Integer> receiveTickRequest = receiveTickRequest(time, ticks, latch);
-        Callable<Integer> asyncRecalculationRequest = asyncRecalculationRequest(latch);
+        Callable<Integer> asyncProcessing = asyncProcessing();
         Callable<Integer> retrieveStatisticsRequest = receiveStatisticsRequest(ticks, latch);
 
         ExecutorService executor = Executors.newFixedThreadPool(6);
         executor.submit(receiveTickRequest);
         executor.submit(receiveTickRequest);
-        executor.submit(receiveTickRequest);
-        executor.submit(asyncRecalculationRequest);
         executor.submit(retrieveStatisticsRequest);
         executor.submit(retrieveStatisticsRequest);
+        executor.submit(retrieveStatisticsRequest);
+        executor.submit(asyncProcessing);
 
         latch.await(3, TimeUnit.SECONDS);
-        executor.shutdown();
+        executor.shutdownNow();
+    }
+
+    private Callable<Integer> asyncProcessing() {
+        return () -> {
+            applicationService.doAsyncProcessing();
+            return 0;
+        };
+    }
+
+    private Callable<Integer> receiveTickRequest(long time, List<Tick> ticks, CountDownLatch latch) {
+        return () -> {
+            for (int i = 0; i < 100; i++) {
+                var price = 100d + random.nextInt(100);
+                var timestamp = time + random.nextInt(60_000);
+                var tick = genTick(price, timestamp);
+
+                applicationService.receiveTick(tick);
+                ticks.add(tick);
+                Thread.sleep(100);
+            }
+            latch.countDown();
+            return 0;
+        };
     }
 
     private Callable<Integer> receiveStatisticsRequest(List<Tick> ticks, CountDownLatch latch) {
@@ -51,45 +74,18 @@ class IndexApplicationServiceTest {
             try {
                 var instrument = IndexApplicationService.ALL_INSTRUMENTS;
                 for (int i = 0; i < 20; i++) {
-                    var snapshot = applicationService.getStatSnapshots().get(instrument);
-                    var source = new ArrayList<>(ticks);
-                    assertStatistic(snapshot, source);
-                    Thread.sleep(100);
+                    if (applicationService.hasTicks()) {
+                        var snapshot = applicationService.getStatSnapshots().get(instrument);
+                        var source = new ArrayList<>(ticks);
+                        assertStatistic(snapshot, source);
+                    }
+                    Thread.sleep(150);
                 }
                 latch.countDown();
             }catch (Exception e) {
                 e.printStackTrace();
             }
-                return 0;
-            };
-    }
-
-    private Callable<Integer> asyncRecalculationRequest(CountDownLatch latch) {
-        return () -> {
-                for (int i = 0; i < 21; i++) {
-                    applicationService.asyncRecalculateStats();
-                    Thread.sleep(100);
-                }
-
-            latch.countDown();
-    
-                return 0;
-            };
-    }
-
-    private Callable<Integer> receiveTickRequest(long time, List<Tick> ticks, CountDownLatch latch) {
-        return () -> {
-                for (int i = 0; i < 10; i++) {
-                    var price = 100d + random.nextInt(100);
-                    var timestamp = time + random.nextInt(60_000);
-                    var tick = genTick(price, timestamp);
-    
-                    applicationService.receiveTick(tick);
-                    ticks.add(tick);
-                    Thread.sleep(200);
-                }
-                latch.countDown();
-                return 0;
-            };
+            return 0;
+        };
     }
 }
