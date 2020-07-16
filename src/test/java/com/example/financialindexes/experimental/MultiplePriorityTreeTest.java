@@ -2,21 +2,30 @@ package com.example.financialindexes.experimental;
 
 import com.example.financialindexes.domain.Tick;
 import com.example.financialindexes.utils.MultiplePriorityTree;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MultiplePriorityTreeTest {
 
-    @Test
-    void testRedBlackTree() {
+    private MultiplePriorityTree<Tick> ticks;
+    private final String TIME = "time";
+    private final String PRICE = "price";
 
+    @BeforeEach
+    void setUp() {
         Random random = new Random();
         BiFunction<Double, Long, Tick> genTick = (price, timeStamp) -> {
             String[] instruments = {"AB", "CD", "EF"};
@@ -27,10 +36,7 @@ public class MultiplePriorityTreeTest {
             );
         };
 
-        var TIME = "time";
-        var PRICE = "price";
-
-        var ticks = new MultiplePriorityTree<>(
+        ticks = new MultiplePriorityTree<>(
                 Map.of(
                         TIME, comparing(Tick::getTimestamp),
                         PRICE, comparing(Tick::getPrice)
@@ -45,6 +51,10 @@ public class MultiplePriorityTreeTest {
         ticks.add(genTick.apply(700d, 30L));
         ticks.add(genTick.apply(500d, 40L));
         ticks.add(genTick.apply(400d, 20L));
+    }
+
+    @Test
+    void testRedBlackTree() {
 
         ticks.prettyPrint();
         assertEquals(300d, ticks.first(TIME).getPrice().doubleValue());
@@ -81,5 +91,40 @@ public class MultiplePriorityTreeTest {
         assertEquals(500d, ticks.first(TIME).getPrice().doubleValue());
         assertEquals(600d, ticks.last(TIME).getPrice().doubleValue());
 
+    }
+
+    @Test
+    void testRemoveIssue() {
+        var random = new Random();
+        for (int i = 15; i < 20; i++) {
+            var allTicks = Stream.generate(() ->
+                    new Tick("", BigDecimal.valueOf(100 + random.nextInt(100)), 10L + + random.nextInt(100)))
+                    .limit(i)
+                    .peek(System.out::println)
+                    .collect(Collectors.toList());
+            allTicks.add(new Tick("", BigDecimal.valueOf(1000), 100L));
+
+            ticks.clear();
+            allTicks.forEach(tick -> {
+                ticks.add(tick);
+
+                assertEquals(ticks.first(PRICE), ticks.minimum(PRICE));
+                assertEquals(ticks.first(TIME), ticks.minimum(TIME));
+                assertEquals(ticks.last(PRICE), ticks.maximum(PRICE));
+                assertEquals(ticks.last(TIME), ticks.maximum(TIME));
+            });
+
+            allTicks.forEach(tick -> {
+                ticks.pollFirst(PRICE);
+
+                if (!ticks.isEmpty()) {
+
+                    assertEquals(ticks.first(PRICE), ticks.minimum(PRICE));
+                    assertEquals(ticks.first(TIME), ticks.minimum(TIME));
+                    assertEquals(ticks.last(PRICE), ticks.maximum(PRICE));
+                    assertEquals(ticks.last(TIME), ticks.maximum(TIME));
+                }
+            });
+        }
     }
 }

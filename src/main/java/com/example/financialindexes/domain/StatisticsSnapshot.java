@@ -42,7 +42,7 @@ public class StatisticsSnapshot {
             // adding new tick modify affect statistics values
             return !recalculate && (isFresh || isEdge)
                     ? statistics.withTick(tick, sumOldPrice, source.size())
-                    : statistics.calculate(sumOldPrice.subtract(tick.getPrice()), source);
+                    : statistics.calculate(sumOldPrice.subtract(tick.getPrice()), getSource());
         });
 
         return of(stat, source);

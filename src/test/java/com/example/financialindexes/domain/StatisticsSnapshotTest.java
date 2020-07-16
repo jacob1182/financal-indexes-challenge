@@ -20,13 +20,13 @@ class StatisticsSnapshotTest {
         var timeSum = 0;
         var timestamp = System.currentTimeMillis() - 60_000;
         for (int i = 0; i < 80_000; i++) {
-            var price = (double) (random.nextInt(100) + 10000) / 100;
+            var price = (double) (100 + random.nextInt(900));
             var tick = genTick(price, timestamp + i);
             var time = System.currentTimeMillis();
             snapshot = snapshot.withTick(time, tick);
             timeSum += System.currentTimeMillis() - time;
         }
-        assertThat(timeSum).isLessThanOrEqualTo(800);
+        assertThat(timeSum).isLessThanOrEqualTo(1000);
     }
 
 
@@ -94,7 +94,7 @@ class StatisticsSnapshotTest {
             Thread.sleep(100);
         }
 
-        assertThat(timeSum).isLessThanOrEqualTo(10);
+        assertThat(timeSum).isLessThanOrEqualTo(5);
     }
 
     @Test
